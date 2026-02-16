@@ -1,119 +1,173 @@
 'use client';
 
+import { useState } from 'react';
 import { TableInfo } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChevronDown, ChevronRight, Key, Link2, AlertCircle } from 'lucide-react';
 
 interface TableDetailsProps {
   table: TableInfo;
 }
 
 export default function TableDetails({ table }: TableDetailsProps) {
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['columns']));
+
+  const toggleSection = (section: string) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(section)) {
+      newExpanded.delete(section);
+    } else {
+      newExpanded.add(section);
+    }
+    setExpandedSections(newExpanded);
+  };
+
+  const piiColumns = table.piiDetection.filter(p => p.detectedType !== 'none').length;
+
   return (
-    <div className="p-6 overflow-y-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">{table.name}</h2>
-        <div className="flex gap-2">
-          <Badge variant="secondary">{table.columns.length} columns</Badge>
-          <Badge variant="outline">{table.primaryKeys.length} primary keys</Badge>
-          <Badge variant="outline">{table.foreignKeys.length} foreign keys</Badge>
+    <div className="p-6 overflow-y-auto bg-slate-50">
+      {/* Header */}
+      <div className="mb-6 bg-white p-6 rounded-lg border">
+        <h2 className="text-2xl font-bold mb-3">{table.name}</h2>
+        <div className="flex gap-2 flex-wrap">
+          <Badge variant="secondary" className="text-sm">
+            {table.columns.length} columns
+          </Badge>
+          <Badge variant="outline" className="text-sm">
+            {table.primaryKeys.length} PKs
+          </Badge>
+          <Badge variant="outline" className="text-sm">
+            {table.foreignKeys.length} FKs
+          </Badge>
+          {piiColumns > 0 && (
+            <Badge variant="destructive" className="text-sm">
+              {piiColumns} PII fields
+            </Badge>
+          )}
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Columns</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {table.columns.map((column) => {
-              const piiInfo = table.piiDetection.find((p) => p.columnName === column.name);
-              const isPII = piiInfo && piiInfo.detectedType !== 'none';
+      {/* Columns Table */}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <div className="px-4 py-3 bg-slate-50 border-b">
+          <h3 className="font-semibold text-sm">Columns</h3>
+        </div>
+        
+        <div className="divide-y divide-slate-100">
+          {table.columns.map((column) => {
+            const piiInfo = table.piiDetection.find((p) => p.columnName === column.name);
+            const isPII = piiInfo && piiInfo.detectedType !== 'none';
+            const isForeignKey = table.foreignKeys.some(fk => fk.columnName === column.name);
 
-              return (
-                <div
-                  key={column.name}
-                  className={`p-3 rounded-lg border-2 ${
-                    isPII ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-semibold text-sm">{column.name}</span>
-                      {column.isPrimaryKey && (
-                        <Badge variant="default" className="text-xs">
-                          PK
-                        </Badge>
-                      )}
-                      {column.isUnique && (
-                        <Badge variant="outline" className="text-xs">
-                          UNIQUE
-                        </Badge>
-                      )}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {column.nullable ? 'nullable' : 'not null'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 mb-2">
-                    <code className="text-xs bg-white px-2 py-1 rounded border">
-                      {column.type}
-                      {column.maxLength ? `(${column.maxLength})` : ''}
-                    </code>
-                    {column.defaultValue && (
-                      <span className="text-xs text-muted-foreground">
-                        default: {column.defaultValue}
-                      </span>
+            return (
+              <div
+                key={column.name}
+                className={`px-4 py-3 hover:bg-slate-50 transition-colors ${
+                  isPII ? 'bg-red-50/50' : ''
+                }`}
+              >
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    {column.isPrimaryKey && (
+                      <Key className="w-3.5 h-3.5 text-slate-500" />
+                    )}
+                    {isForeignKey && (
+                      <Link2 className="w-3.5 h-3.5 text-slate-500" />
+                    )}
+                    <span className="font-mono font-semibold text-sm">{column.name}</span>
+                    {column.isUnique && (
+                      <Badge variant="outline" className="text-xs h-5">
+                        UNIQUE
+                      </Badge>
+                    )}
+                    {isPII && (
+                      <Badge variant="destructive" className="text-xs h-5">
+                        PII
+                      </Badge>
                     )}
                   </div>
+                  <span className={`text-xs px-2 py-0.5 rounded ${
+                    column.nullable 
+                      ? 'bg-slate-100 text-slate-600' 
+                      : 'bg-slate-200 text-slate-700 font-medium'
+                  }`}>
+                    {column.nullable ? 'nullable' : 'required'}
+                  </span>
+                </div>
 
+                <div className="flex items-center gap-3 text-xs text-slate-600 ml-6">
+                  <code className="bg-slate-100 px-1.5 py-0.5 rounded">
+                    {column.type}
+                    {column.maxLength ? `(${column.maxLength})` : ''}
+                  </code>
+                  {column.defaultValue && (
+                    <span>
+                      default: <code className="bg-slate-100 px-1.5 py-0.5 rounded">{column.defaultValue}</code>
+                    </span>
+                  )}
                   {isPII && (
-                    <div className="mt-2 pt-2 border-t border-red-200">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="destructive" className="text-xs">
-                          PII: {piiInfo.detectedType}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {piiInfo.confidence} confidence - {piiInfo.reason}
-                        </span>
-                      </div>
-                    </div>
+                    <span className="text-red-600">
+                      {piiInfo.detectedType} · {piiInfo.confidence} confidence
+                    </span>
                   )}
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            );
+          })}
+        </div>
+      </div>
 
+      {/* Foreign Keys Section */}
       {table.foreignKeys.length > 0 && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Foreign Keys</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
+        <div className="bg-white rounded-lg border">
+          <button
+            onClick={() => toggleSection('foreignKeys')}
+            className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              {expandedSections.has('foreignKeys') ? (
+                <ChevronDown className="w-5 h-5 text-gray-500" />
+              ) : (
+                <ChevronRight className="w-5 h-5 text-gray-500" />
+              )}
+              <h3 className="font-semibold text-lg">Foreign Keys</h3>
+              <Badge variant="secondary">{table.foreignKeys.length}</Badge>
+            </div>
+          </button>
+
+          {expandedSections.has('foreignKeys') && (
+            <div className="px-4 pb-4 space-y-2">
               {table.foreignKeys.map((fk, idx) => (
-                <div key={idx} className="p-3 bg-purple-50 border-2 border-purple-200 rounded-lg">
-                  <div className="font-mono text-sm mb-1">
-                    <span className="font-semibold">{fk.columnName}</span>
-                    <span className="text-muted-foreground mx-2">→</span>
-                    <span className="font-semibold">
-                      {fk.referencedTable}.{fk.referencedColumn}
-                    </span>
+                <div key={idx} className="p-4 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Link2 className="w-4 h-4 text-purple-600" />
+                    <div className="font-mono text-sm">
+                      <span className="font-semibold text-purple-900">{fk.columnName}</span>
+                      <span className="text-gray-500 mx-2">→</span>
+                      <span className="font-semibold text-purple-900">
+                        {fk.referencedTable}.{fk.referencedColumn}
+                      </span>
+                    </div>
                   </div>
                   {(fk.onDelete || fk.onUpdate) && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {fk.onDelete && <span>ON DELETE: {fk.onDelete}</span>}
-                      {fk.onUpdate && <span className="ml-3">ON UPDATE: {fk.onUpdate}</span>}
+                    <div className="flex gap-3 text-xs text-purple-700 ml-6">
+                      {fk.onDelete && (
+                        <span className="bg-purple-100 px-2 py-1 rounded">
+                          ON DELETE: {fk.onDelete}
+                        </span>
+                      )}
+                      {fk.onUpdate && (
+                        <span className="bg-purple-100 px-2 py-1 rounded">
+                          ON UPDATE: {fk.onUpdate}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       )}
     </div>
   );

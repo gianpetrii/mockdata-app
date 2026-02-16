@@ -6,20 +6,21 @@ export default function LogoIcon({ className = "w-8 h-8" }: { className?: string
       xmlns="http://www.w3.org/2000/svg"
       className={className}
     >
-      {/* Database cylinder */}
-      <ellipse cx="16" cy="10" rx="10" ry="4" fill="currentColor" opacity="0.3" />
-      <rect x="6" y="10" width="20" height="12" fill="currentColor" opacity="0.3" />
-      <ellipse cx="16" cy="22" rx="10" ry="4" fill="currentColor" />
+      {/* Database layers */}
+      <ellipse cx="16" cy="8" rx="9" ry="3" fill="currentColor" opacity="0.2" />
+      <ellipse cx="16" cy="13" rx="9" ry="3" fill="currentColor" opacity="0.3" />
+      <ellipse cx="16" cy="18" rx="9" ry="3" fill="currentColor" opacity="0.4" />
+      <ellipse cx="16" cy="23" rx="9" ry="3" fill="currentColor" />
       
-      {/* Shield overlay */}
+      {/* Lock/encryption symbol */}
+      <rect x="13" y="14" width="6" height="7" rx="1" fill="white" />
       <path
-        d="M16 6L12 8V12C12 15 14 17 16 18C18 17 20 15 20 12V8L16 6Z"
-        fill="currentColor"
+        d="M14 14V12C14 10.9 14.9 10 16 10C17.1 10 18 10.9 18 12V14"
+        stroke="white"
+        strokeWidth="1.5"
+        fill="none"
       />
-      <path
-        d="M16 8L14 9V11.5C14 13 15 14 16 14.5C17 14 18 13 18 11.5V9L16 8Z"
-        fill="white"
-      />
+      <circle cx="16" cy="17.5" r="1" fill="currentColor" />
     </svg>
   );
 }
