@@ -17,6 +17,7 @@ export interface ColumnInfo {
   isPrimaryKey: boolean;
   isUnique: boolean;
   maxLength: number | null;
+  comment: string | null;
 }
 
 export interface ForeignKey {

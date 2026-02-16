@@ -12,9 +12,10 @@ interface TableSidebarProps {
   tables: TableInfo[];
   selectedTable: string | null;
   onTableSelect: (tableName: string) => void;
+  showClassification: boolean;
 }
 
-export default function TableSidebar({ tables, selectedTable, onTableSelect }: TableSidebarProps) {
+export default function TableSidebar({ tables, selectedTable, onTableSelect, showClassification }: TableSidebarProps) {
   const [search, setSearch] = useState('');
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
   const [chatMessage, setChatMessage] = useState('');
@@ -130,33 +131,47 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect }: T
 
                   {isExpanded && (
                     <div className="bg-slate-50 px-3 py-2 space-y-1">
-                      {table.columns.map((column) => {
-                        const piiInfo = table.piiDetection.find(p => p.columnName === column.name);
-                        const isPII = piiInfo && piiInfo.detectedType !== 'none';
-                        
-                        return (
-                          <div
-                            key={column.name}
-                            className="flex items-center gap-2 py-1.5 px-2 rounded hover:bg-white text-xs"
+                  {table.columns.map((column) => {
+                    const piiInfo = table.piiDetection.find(p => p.columnName === column.name);
+                    const isPII = piiInfo && piiInfo.detectedType !== 'none';
+                    
+                    const getClassificationColor = () => {
+                      if (!showClassification || !isPII) return '';
+                      switch (piiInfo.classification) {
+                        case 'direct_identifier': return 'bg-red-100 border-l-2 border-l-red-500';
+                        case 'indirect_identifier': return 'bg-orange-100 border-l-2 border-l-orange-500';
+                        case 'sensitive_data': return 'bg-purple-100 border-l-2 border-l-purple-500';
+                        default: return '';
+                      }
+                    };
+                    
+                    return (
+                      <div
+                        key={column.name}
+                        className={`flex items-center gap-2 py-1.5 px-2 rounded hover:bg-white text-xs transition-colors ${getClassificationColor()}`}
+                      >
+                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                          {column.isPrimaryKey && (
+                            <Key className="w-3 h-3 text-indigo-600 flex-shrink-0" />
+                          )}
+                          {table.foreignKeys.some(fk => fk.columnName === column.name) && (
+                            <Link2 className="w-3 h-3 text-purple-600 flex-shrink-0" />
+                          )}
+                          <span className="font-mono font-medium truncate">{column.name}</span>
+                        </div>
+                        <span className="text-gray-500 text-xs flex-shrink-0">{column.type}</span>
+                        {showClassification && isPII && (
+                          <Badge 
+                            variant="outline" 
+                            className="text-[10px] px-1 py-0 h-4"
                           >
-                            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                              {column.isPrimaryKey && (
-                                <Key className="w-3 h-3 text-indigo-600 flex-shrink-0" />
-                              )}
-                              {table.foreignKeys.some(fk => fk.columnName === column.name) && (
-                                <Link2 className="w-3 h-3 text-purple-600 flex-shrink-0" />
-                              )}
-                              <span className="font-mono font-medium truncate">{column.name}</span>
-                            </div>
-                            <span className="text-gray-500 text-xs flex-shrink-0">{column.type}</span>
-                            {isPII && (
-                              <Badge variant="destructive" className="text-[10px] px-1 py-0 h-4">
-                                PII
-                              </Badge>
-                            )}
-                          </div>
-                        );
-                      })}
+                            {piiInfo.classification === 'direct_identifier' ? 'DIR' : 
+                             piiInfo.classification === 'indirect_identifier' ? 'IND' : 'SENS'}
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
                     </div>
                   )}
                 </div>

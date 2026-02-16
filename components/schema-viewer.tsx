@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import TableSidebar from '@/components/table-sidebar';
 import ERDiagram from '@/components/er-diagram';
 import TableDetails from '@/components/table-details';
+import ClassificationToggle from '@/components/classification-toggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SchemaViewerProps {
@@ -18,6 +19,7 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
   const [selectedTable, setSelectedTable] = useState<string | null>(
     schema?.tables[0]?.name || null
   );
+  const [showClassification, setShowClassification] = useState(false);
 
   const handleDisconnect = async () => {
     await api.disconnect();
@@ -39,9 +41,15 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
             {schema.tables.length} tables detected
           </p>
         </div>
-        <Button variant="outline" onClick={handleDisconnect}>
-          Disconnect
-        </Button>
+        <div className="flex items-center gap-3">
+          <ClassificationToggle 
+            enabled={showClassification}
+            onToggle={setShowClassification}
+          />
+          <Button variant="outline" onClick={handleDisconnect}>
+            Disconnect
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 flex gap-4 min-h-0">
@@ -49,6 +57,7 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
           tables={schema.tables}
           selectedTable={selectedTable}
           onTableSelect={setSelectedTable}
+          showClassification={showClassification}
         />
 
         <div className="flex-1 flex flex-col min-w-0">
@@ -63,12 +72,16 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
                 tables={schema.tables}
                 onTableSelect={setSelectedTable}
                 selectedTable={selectedTable}
+                showClassification={showClassification}
               />
             </TabsContent>
 
             <TabsContent value="details" className="flex-1 overflow-hidden mt-0">
               {selectedTableData ? (
-                <TableDetails table={selectedTableData} />
+                <TableDetails 
+                  table={selectedTableData}
+                  showClassification={showClassification}
+                />
               ) : (
                 <div className="flex items-center justify-center h-full text-muted-foreground">
                   Select a table from the sidebar

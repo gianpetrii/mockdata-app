@@ -11,9 +11,16 @@ export type PIIType =
   | 'ip_address'
   | 'none';
 
+export type DataClassification = 
+  | 'direct_identifier'    // Email, SSN, name, phone
+  | 'indirect_identifier'  // DOB, zip code, gender
+  | 'sensitive_data'       // Salary, medical, financial
+  | 'non_sensitive';
+
 export interface PIIDetectionResult {
   columnName: string;
   detectedType: PIIType;
+  classification: DataClassification;
   confidence: 'high' | 'medium' | 'low';
   reason: string;
 }
@@ -39,9 +46,11 @@ export class PIIDetector {
     for (const [piiType, patterns] of Object.entries(this.COLUMN_NAME_PATTERNS)) {
       for (const pattern of patterns) {
         if (pattern.test(column.name)) {
+          const classification = this.classifyData(piiType as PIIType);
           return {
             columnName: column.name,
             detectedType: piiType as PIIType,
+            classification,
             confidence: 'high',
             reason: `Column name matches ${piiType} pattern`,
           };
@@ -52,8 +61,22 @@ export class PIIDetector {
     return {
       columnName: column.name,
       detectedType: 'none',
+      classification: 'non_sensitive',
       confidence: 'high',
       reason: 'No PII patterns detected',
     };
+  }
+
+  private static classifyData(piiType: PIIType): DataClassification {
+    const directIdentifiers: PIIType[] = ['email', 'phone', 'name', 'ssn', 'credit_card'];
+    const indirectIdentifiers: PIIType[] = ['date_of_birth', 'address', 'ip_address'];
+    
+    if (directIdentifiers.includes(piiType)) {
+      return 'direct_identifier';
+    }
+    if (indirectIdentifiers.includes(piiType)) {
+      return 'indirect_identifier';
+    }
+    return 'non_sensitive';
   }
 }

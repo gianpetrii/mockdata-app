@@ -53,15 +53,20 @@ export class DatabaseIntrospector {
     if (this.dbType === 'postgres') {
       const result = await this.knex.raw(`
         SELECT 
-          column_name,
-          data_type,
-          is_nullable,
-          column_default,
-          character_maximum_length
-        FROM information_schema.columns
-        WHERE table_schema = 'public' 
-        AND table_name = ?
-        ORDER BY ordinal_position
+          c.column_name,
+          c.data_type,
+          c.is_nullable,
+          c.column_default,
+          c.character_maximum_length,
+          pgd.description as column_comment
+        FROM information_schema.columns c
+        LEFT JOIN pg_catalog.pg_statio_all_tables st 
+          ON c.table_schema = st.schemaname AND c.table_name = st.relname
+        LEFT JOIN pg_catalog.pg_description pgd 
+          ON pgd.objoid = st.relid AND pgd.objsubid = c.ordinal_position
+        WHERE c.table_schema = 'public' 
+        AND c.table_name = ?
+        ORDER BY c.ordinal_position
       `, [tableName]);
 
       const primaryKeys = await this.getPrimaryKeys(tableName);
@@ -74,6 +79,7 @@ export class DatabaseIntrospector {
         isPrimaryKey: primaryKeys.includes(row.column_name),
         isUnique: false,
         maxLength: row.character_maximum_length,
+        comment: row.column_comment || null,
       }));
     } else {
       const result = await this.knex.raw(`
@@ -83,7 +89,8 @@ export class DatabaseIntrospector {
           is_nullable,
           column_default,
           character_maximum_length,
-          column_key
+          column_key,
+          column_comment
         FROM information_schema.columns
         WHERE table_schema = DATABASE()
         AND table_name = ?
@@ -98,6 +105,7 @@ export class DatabaseIntrospector {
         isPrimaryKey: row.column_key === 'PRI',
         isUnique: row.column_key === 'UNI',
         maxLength: row.character_maximum_length,
+        comment: row.column_comment || null,
       }));
     }
   }

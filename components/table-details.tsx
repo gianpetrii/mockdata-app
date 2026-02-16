@@ -7,9 +7,10 @@ import { ChevronDown, ChevronRight, Key, Link2, AlertCircle } from 'lucide-react
 
 interface TableDetailsProps {
   table: TableInfo;
+  showClassification: boolean;
 }
 
-export default function TableDetails({ table }: TableDetailsProps) {
+export default function TableDetails({ table, showClassification }: TableDetailsProps) {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['columns']));
 
   const toggleSection = (section: string) => {
@@ -59,12 +60,20 @@ export default function TableDetails({ table }: TableDetailsProps) {
             const isPII = piiInfo && piiInfo.detectedType !== 'none';
             const isForeignKey = table.foreignKeys.some(fk => fk.columnName === column.name);
 
+            const getClassificationBg = () => {
+              if (!showClassification || !isPII) return isPII ? 'bg-red-50/50' : '';
+              switch (piiInfo.classification) {
+                case 'direct_identifier': return 'bg-red-50 border-l-4 border-l-red-500';
+                case 'indirect_identifier': return 'bg-orange-50 border-l-4 border-l-orange-500';
+                case 'sensitive_data': return 'bg-purple-50 border-l-4 border-l-purple-500';
+                default: return '';
+              }
+            };
+
             return (
               <div
                 key={column.name}
-                className={`px-4 py-3 hover:bg-slate-50 transition-colors ${
-                  isPII ? 'bg-red-50/50' : ''
-                }`}
+                className={`px-4 py-3 hover:bg-slate-50 transition-colors ${getClassificationBg()}`}
               >
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
@@ -95,7 +104,7 @@ export default function TableDetails({ table }: TableDetailsProps) {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-slate-600 ml-6">
+                <div className="flex items-center gap-3 text-xs text-slate-600 ml-6 flex-wrap">
                   <code className="bg-slate-100 px-1.5 py-0.5 rounded">
                     {column.type}
                     {column.maxLength ? `(${column.maxLength})` : ''}
@@ -105,10 +114,22 @@ export default function TableDetails({ table }: TableDetailsProps) {
                       default: <code className="bg-slate-100 px-1.5 py-0.5 rounded">{column.defaultValue}</code>
                     </span>
                   )}
+                  {column.comment && (
+                    <span className="text-slate-500 italic">
+                      {column.comment}
+                    </span>
+                  )}
                   {isPII && (
                     <span className="text-red-600">
                       {piiInfo.detectedType} · {piiInfo.confidence} confidence
                     </span>
+                  )}
+                  {showClassification && isPII && (
+                    <Badge variant="outline" className="text-xs">
+                      {piiInfo.classification === 'direct_identifier' ? 'Direct Identifier' :
+                       piiInfo.classification === 'indirect_identifier' ? 'Indirect Identifier' :
+                       'Sensitive Data'}
+                    </Badge>
                   )}
                 </div>
               </div>
