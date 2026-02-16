@@ -1,86 +1,36 @@
-# MockData
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-Genera datos de prueba sintéticos e inteligentes en segundos, sin exponer información sensible.
+## Getting Started
 
-## Problemática
-
-Las empresas usan copias de datos reales de producción para testing, exponiendo información sensible (PII, datos financieros) a más personas de las necesarias, violando regulaciones (GDPR, LGPD) y aumentando riesgos de seguridad.
-
-MockData automatiza la generación y anonimización de datos de prueba sintéticos, eliminando la necesidad de usar datos reales.
-
-## Cliente Modelo
-
-- Startups y scale-ups tecnológicas (10-200 empleados)
-- Software houses / Consultoras de desarrollo
-- Empresas de sectores regulados: Fintech, Healthtech, E-commerce, Seguros
-- Equipos que manejan datos sensibles y necesitan cumplir regulaciones
-
-## MVP - Funcionalidades
-
-1. **Conexión a BD** (PostgreSQL, MySQL)
-2. **Detección automática de PII** (regex + nombres de columnas)
-3. **Visualización de schema** (diagrama ER interactivo)
-4. **Chat/LLM interface** para especificar transformaciones
-5. **5 estrategias de anonimización**:
-   - Synthetic realistic replacement
-   - Deterministic hash
-   - Randomized preserving format
-   - Nullification
-   - Keep original
-6. **Safe Clone** (nueva BD anonimizada)
-7. **Export SQL** opcional
-8. **Preservación de constraints** (PKs, FKs, unique, not null, checks)
-
-## Stack Tecnológico
-
-- **Backend**: Node.js + TypeScript + Express + Knex.js
-- **Frontend**: Next.js + shadcn/ui + Tailwind + React Flow
-- **LLM**: OpenRouter (MVP) → Claude (producción)
-- **Databases**: PostgreSQL, MySQL
-
-## Estructura del Proyecto
-
-```
-mockdata-app/
-├── backend/          # API + lógica de anonimización
-├── frontend/         # Next.js app
-└── pnpm-workspace.yaml
-```
-
-## Desarrollo
+First, run the development server:
 
 ```bash
-# Instalar dependencias
-pnpm install
-
-# Desarrollo (ambos servicios)
+npm run dev
+# or
+yarn dev
+# or
 pnpm dev
-
-# Solo frontend
-pnpm dev:frontend
-
-# Solo backend
-pnpm dev:backend
+# or
+bun dev
 ```
 
-## Configuración
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-1. Copiar `backend/.env.example` a `backend/.env`
-2. Configurar `OPENROUTER_API_KEY`
-3. Configurar conexiones de BD según necesidad
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## Roadmap
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-### Fase 2
-- Tokenization determinística
-- Relationship-aware synthetic generation
-- Distribution-preserving generation
-- CLI tool
-- Integración cloud storage
+## Learn More
 
-### Fase 3
-- Differential privacy
-- k-anonymity
-- Data profiling avanzado
-- Audit logs
-- SOC2 compliance
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
