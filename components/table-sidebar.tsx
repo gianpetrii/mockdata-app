@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
-import { Search, ChevronDown, ChevronRight, Table2, Key, Link2, MessageSquare, Send } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, Table2, Key, Link2, MessageSquare, Send, MessageCircle } from 'lucide-react';
 
 interface TableSidebarProps {
   tables: TableInfo[];
@@ -149,6 +149,7 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
                       <div
                         key={column.name}
                         className={`flex items-center gap-2 py-1.5 px-2 rounded hover:bg-white text-xs transition-colors ${getClassificationColor()}`}
+                        title={column.comment || undefined}
                       >
                         <div className="flex items-center gap-1.5 flex-1 min-w-0">
                           {column.isPrimaryKey && (
@@ -159,16 +160,21 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
                           )}
                           <span className="font-mono font-medium truncate">{column.name}</span>
                         </div>
-                        <span className="text-gray-500 text-xs flex-shrink-0">{column.type}</span>
-                        {showClassification && isPII && (
-                          <Badge 
-                            variant="outline" 
-                            className="text-[10px] px-1 py-0 h-4"
-                          >
-                            {piiInfo.classification === 'direct_identifier' ? 'DIR' : 
-                             piiInfo.classification === 'indirect_identifier' ? 'IND' : 'SENS'}
-                          </Badge>
-                        )}
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <span className="text-gray-500 text-xs">{column.type}</span>
+                          {column.comment && (
+                            <MessageCircle className="w-3 h-3 text-blue-500" />
+                          )}
+                          {showClassification && isPII && (
+                            <Badge 
+                              variant="outline" 
+                              className="text-[10px] px-1 py-0 h-4"
+                            >
+                              {piiInfo.classification === 'direct_identifier' ? 'DIR' : 
+                               piiInfo.classification === 'indirect_identifier' ? 'IND' : 'SENS'}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     );
                   })}

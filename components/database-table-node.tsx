@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Key, Link2 } from 'lucide-react';
+import { Key, Link2, MessageCircle } from 'lucide-react';
 import { TableInfo } from '@/lib/api';
 
 interface TableNodeData {
@@ -57,6 +57,7 @@ function DatabaseTableNode({ data, selected }: NodeProps<TableNodeData>) {
             <div
               key={column.name}
               className={`px-3 py-2 flex items-center justify-between gap-3 relative ${getClassificationBg()}`}
+              title={column.comment || undefined}
             >
               {/* Left handle for incoming connections */}
               <Handle
@@ -90,9 +91,14 @@ function DatabaseTableNode({ data, selected }: NodeProps<TableNodeData>) {
                   }`} />
                 )}
               </div>
-              <span className="text-[11px] text-slate-500 font-mono flex-shrink-0">
-                {column.type.split('(')[0].substring(0, 10)}
-              </span>
+              <div className="flex items-center gap-1 flex-shrink-0">
+                <span className="text-[11px] text-slate-500 font-mono">
+                  {column.type.split('(')[0].substring(0, 10)}
+                </span>
+                {column.comment && (
+                  <MessageCircle className="w-3 h-3 text-blue-500" />
+                )}
+              </div>
 
               {/* Right handle for outgoing connections */}
               <Handle

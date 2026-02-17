@@ -61,6 +61,7 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
         console.error('Failed to download diagram:', err);
       });
   }, []);
+  
   // Convert tables to React Flow nodes with custom node type
   const initialNodes: Node[] = useMemo(() => {
     return tables.map((table, index) => {
@@ -80,7 +81,7 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
         },
       };
     });
-  }, [tables, selectedTable, showClassification]);
+  }, [tables, showClassification]);
 
   // Convert foreign keys to React Flow edges with column-specific handles
   const initialEdges: Edge[] = useMemo(() => {
@@ -133,10 +134,24 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
     []
   );
 
-  // Update nodes when selection changes
+  // Update node data when selection or classification changes, preserving positions
   useMemo(() => {
-    setNodes(initialNodes);
-  }, [initialNodes, setNodes]);
+    setNodes((currentNodes) =>
+      currentNodes.map((node) => {
+        const table = tables.find((t) => t.name === node.id);
+        if (!table) return node;
+        
+        return {
+          ...node,
+          data: {
+            table,
+            isSelected: selectedTable === node.id,
+            showClassification,
+          },
+        };
+      })
+    );
+  }, [selectedTable, showClassification, tables, setNodes]);
 
   // Update edges when selection changes
   useMemo(() => {
