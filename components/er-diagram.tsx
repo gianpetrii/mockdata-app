@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import DatabaseTableNode from '@/components/database-table-node';
+import ClassificationLegend from '@/components/classification-legend';
 
 interface ERDiagramProps {
   tables: TableInfo[];
@@ -26,6 +27,12 @@ interface ERDiagramProps {
   selectedTable: string | null;
   showClassification: boolean;
 }
+
+const edgeOptions = {
+  style: { strokeWidth: 1.5, stroke: '#cbd5e1' },
+  type: 'smoothstep',
+  markerEnd: { type: MarkerType.ArrowClosed, width: 12, height: 12, color: '#cbd5e1' },
+};
 
 const nodeTypes = {
   databaseTable: DatabaseTableNode,
@@ -138,7 +145,8 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
 
   return (
     <div className="w-full h-full bg-white rounded-lg relative overflow-hidden">
-      <div className="absolute top-4 right-4 z-10">
+      <div className="absolute top-4 right-4 z-10 flex gap-2">
+        {showClassification && <ClassificationLegend />}
         <Button
           onClick={downloadImage}
           size="sm"
@@ -153,16 +161,18 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        defaultEdgeOptions={edgeOptions}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
-        nodesDraggable={false}
+        nodesDraggable={true}
         nodesConnectable={false}
         elementsSelectable={true}
         fitView
         minZoom={0.5}
         maxZoom={1.5}
+        elevateEdgesOnSelect={true}
       >
         <Background 
           color="#f1f5f9" 
