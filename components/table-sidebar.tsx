@@ -85,8 +85,8 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
   };
 
   return (
-    <div className="w-80 border-r bg-white h-full flex flex-col">
-      <Tabs defaultValue="schema" className="flex-1 flex flex-col">
+    <div className="w-80 border-r bg-white h-full flex flex-col overflow-hidden">
+      <Tabs defaultValue="schema" className="flex-1 flex flex-col overflow-hidden">
         <div className="p-4 border-b">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="schema" className="flex items-center gap-2">
@@ -234,7 +234,7 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
           </div>
         </TabsContent>
 
-        <TabsContent value="chat" className="flex-1 flex flex-col mt-0">
+        <TabsContent value="chat" className="flex-1 flex flex-col mt-0 overflow-hidden">
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {chatHistory.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center px-4">

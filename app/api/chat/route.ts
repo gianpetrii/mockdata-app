@@ -45,13 +45,13 @@ Be concise, technical, and helpful. Focus on practical advice.`;
         'X-Title': 'MockData App',
       },
       body: JSON.stringify({
-        model: 'meta-llama/llama-3.1-8b-instruct:free',
+        model: 'deepseek/deepseek-r1-0528:free',
         messages: [
           { role: 'system', content: systemPrompt },
           ...messages,
         ],
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 2000,
       }),
     });
 

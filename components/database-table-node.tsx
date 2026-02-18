@@ -1,8 +1,8 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Key, Link2 } from 'lucide-react';
+import { Key, Link2, ChevronDown, ChevronUp } from 'lucide-react';
 import { TableInfo } from '@/lib/api';
 
 interface TableNodeData {
@@ -13,7 +13,8 @@ interface TableNodeData {
 
 function DatabaseTableNode({ data, selected }: NodeProps<TableNodeData>) {
   const { table, isSelected, showClassification } = data;
-  const displayColumns = table.columns.slice(0, 6);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const displayColumns = isExpanded ? table.columns : table.columns.slice(0, 6);
   const hasMore = table.columns.length > 6;
 
   return (
@@ -112,9 +113,25 @@ function DatabaseTableNode({ data, selected }: NodeProps<TableNodeData>) {
           );
         })}
         {hasMore && (
-          <div className="px-3 py-1.5 text-[10px] text-slate-400 text-center">
-            +{table.columns.length - 6} more columns
-          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(!isExpanded);
+            }}
+            className="w-full px-3 py-1.5 text-[10px] text-slate-500 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1 border-t border-slate-100"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="w-3 h-3" />
+                Show less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-3 h-3" />
+                +{table.columns.length - 6} more columns
+              </>
+            )}
+          </button>
         )}
       </div>
     </div>
