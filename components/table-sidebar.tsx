@@ -20,6 +20,7 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
   const [expandedTables, setExpandedTables] = useState<Set<string>>(new Set());
   const [chatMessage, setChatMessage] = useState('');
   const [chatHistory, setChatHistory] = useState<Array<{ role: 'user' | 'assistant'; content: string }>>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleTable = (tableName: string) => {
     const newExpanded = new Set(expandedTables);
@@ -40,19 +41,42 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
     return tableMatch || columnMatch;
   });
 
-  const handleSendMessage = () => {
-    if (!chatMessage.trim()) return;
+  const handleSendMessage = async () => {
+    if (!chatMessage.trim() || isLoading) return;
     
-    setChatHistory([...chatHistory, { role: 'user', content: chatMessage }]);
+    const userMessage = chatMessage;
+    setChatHistory([...chatHistory, { role: 'user', content: userMessage }]);
     setChatMessage('');
+    setIsLoading(true);
     
-    // TODO: Integrate with LLM
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...chatHistory, { role: 'user', content: userMessage }],
+          schema: tables,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
       setChatHistory(prev => [...prev, { 
         role: 'assistant', 
-        content: 'Chat functionality coming soon! This will help you analyze and transform your data.' 
+        content: data.message 
       }]);
-    }, 500);
+    } catch (error) {
+      console.error('Chat error:', error);
+      setChatHistory(prev => [...prev, { 
+        role: 'assistant', 
+        content: 'Sorry, I encountered an error. Please try again.' 
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -203,22 +227,35 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
                 </p>
               </div>
             ) : (
-              chatHistory.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+              <>
+                {chatHistory.map((msg, idx) => (
                   <div
-                    className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-                      msg.role === 'user'
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 text-gray-900'
-                    }`}
+                    key={idx}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    {msg.content}
+                    <div
+                      className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-wrap ${
+                        msg.role === 'user'
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-100 text-gray-900'
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
                   </div>
-                </div>
-              ))
+                ))}
+                {isLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-slate-100 rounded-lg px-3 py-2 text-sm">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
 
@@ -235,16 +272,20 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
                   }
                 }}
                 className="flex-1"
+                disabled={isLoading}
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={!chatMessage.trim()}
+                disabled={isLoading || !chatMessage.trim()}
                 size="icon"
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
                 <Send className="w-4 h-4" />
               </Button>
             </div>
+            <p className="text-[10px] text-gray-400 mt-2">
+              Try: "What PII data do I have?" or "Suggest anonymization for customers"
+            </p>
           </div>
         </TabsContent>
       </Tabs>
