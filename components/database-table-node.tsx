@@ -2,7 +2,7 @@
 
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
-import { Key, Link2, MessageCircle } from 'lucide-react';
+import { Key, Link2 } from 'lucide-react';
 import { TableInfo } from '@/lib/api';
 
 interface TableNodeData {
@@ -91,14 +91,9 @@ function DatabaseTableNode({ data, selected }: NodeProps<TableNodeData>) {
                   }`} />
                 )}
               </div>
-              <div className="flex items-center gap-1 flex-shrink-0">
-                <span className="text-[11px] text-slate-500 font-mono">
-                  {column.type.split('(')[0].substring(0, 10)}
-                </span>
-                {column.comment && (
-                  <MessageCircle className="w-3 h-3 text-blue-500" />
-                )}
-              </div>
+              <span className="text-[11px] text-slate-500 font-mono flex-shrink-0">
+                {column.type.split('(')[0].substring(0, 10)}
+              </span>
 
               {/* Right handle for outgoing connections */}
               <Handle

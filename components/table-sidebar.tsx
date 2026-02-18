@@ -6,7 +6,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
-import { Search, ChevronDown, ChevronRight, Table2, Key, Link2, MessageSquare, Send, MessageCircle } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, Table2, Key, Link2, MessageSquare, Send, MessageCircle, Info } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface TableSidebarProps {
   tables: TableInfo[];
@@ -173,7 +178,6 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
                       <div
                         key={column.name}
                         className={`flex items-center gap-2 py-1.5 px-2 rounded hover:bg-white text-xs transition-colors ${getClassificationColor()}`}
-                        title={column.comment || undefined}
                       >
                         <div className="flex items-center gap-1.5 flex-1 min-w-0">
                           {column.isPrimaryKey && (
@@ -187,16 +191,30 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           <span className="text-gray-500 text-xs">{column.type}</span>
                           {column.comment && (
-                            <MessageCircle className="w-3 h-3 text-blue-500" />
-                          )}
-                          {showClassification && isPII && (
-                            <Badge 
-                              variant="outline" 
-                              className="text-[10px] px-1 py-0 h-4"
-                            >
-                              {piiInfo.classification === 'direct_identifier' ? 'DIR' : 
-                               piiInfo.classification === 'indirect_identifier' ? 'IND' : 'SENS'}
-                            </Badge>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className="hover:bg-blue-100 rounded p-0.5 transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Info className="w-3 h-3 text-blue-500" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-80" side="right" align="start">
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <Info className="w-4 h-4 text-blue-500" />
+                                    <h4 className="font-semibold text-sm">Column Comment</h4>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    {column.comment}
+                                  </p>
+                                  <div className="pt-2 border-t text-xs text-muted-foreground">
+                                    <span className="font-mono">{table.name}.{column.name}</span>
+                                  </div>
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           )}
                         </div>
                       </div>
