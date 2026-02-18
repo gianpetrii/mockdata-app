@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState } from 'react';
-import { Search, ChevronDown, ChevronRight, Table2, Key, Link2, MessageSquare, Send, MessageCircle, Info } from 'lucide-react';
+import { Search, ChevronDown, ChevronRight, Table2, Key, Link2, MessageSquare, Send, MessageCircle } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -197,13 +197,13 @@ export default function TableSidebar({ tables, selectedTable, onTableSelect, sho
                                   className="hover:bg-blue-100 rounded p-0.5 transition-colors"
                                   onClick={(e) => e.stopPropagation()}
                                 >
-                                  <Info className="w-3 h-3 text-blue-500" />
+                                  <MessageCircle className="w-3 h-3 text-blue-500" />
                                 </button>
                               </PopoverTrigger>
                               <PopoverContent className="w-80" side="right" align="start">
                                 <div className="space-y-2">
                                   <div className="flex items-center gap-2">
-                                    <Info className="w-4 h-4 text-blue-500" />
+                                    <MessageCircle className="w-4 h-4 text-blue-500" />
                                     <h4 className="font-semibold text-sm">Column Comment</h4>
                                   </div>
                                   <p className="text-sm text-muted-foreground">
