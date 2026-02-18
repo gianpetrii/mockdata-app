@@ -16,16 +16,23 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { TableInfo } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { Download } from 'lucide-react';
+import { Download, Info, Check } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import DatabaseTableNode from '@/components/database-table-node';
-import ClassificationLegend from '@/components/classification-legend';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface ERDiagramProps {
   tables: TableInfo[];
   onTableSelect: (tableName: string) => void;
   selectedTable: string | null;
   showClassification: boolean;
+  onToggleClassification: (enabled: boolean) => void;
 }
 
 const edgeOptions = {
@@ -38,14 +45,17 @@ const nodeTypes = {
   databaseTable: DatabaseTableNode,
 };
 
-function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassification }: ERDiagramProps) {
+function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassification, onToggleClassification }: ERDiagramProps) {
   const { getNodes } = useReactFlow();
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
+
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const downloadImage = useCallback(() => {
     const viewport = document.querySelector('.react-flow__viewport') as HTMLElement;
     if (!viewport) return;
 
+    setIsDownloading(true);
     toPng(viewport, {
       backgroundColor: '#f8fafc',
       width: viewport.offsetWidth,
@@ -56,9 +66,11 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
         link.download = 'er-diagram.png';
         link.href = dataUrl;
         link.click();
+        setTimeout(() => setIsDownloading(false), 1000);
       })
       .catch((err) => {
         console.error('Failed to download diagram:', err);
+        setIsDownloading(false);
       });
   }, []);
   
@@ -161,16 +173,84 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
   return (
     <div className="w-full h-full bg-white rounded-lg relative overflow-hidden">
       <div className="absolute top-4 right-4 z-10 flex gap-2">
-        {showClassification && <ClassificationLegend />}
-        <Button
+        <div className="bg-white/90 backdrop-blur-sm shadow-lg rounded-lg border flex items-center divide-x h-10">
+          <div className="flex items-center gap-2 px-3 h-full">
+            <Switch
+              id="classification-toggle"
+              checked={showClassification}
+              onCheckedChange={onToggleClassification}
+            />
+            <Label htmlFor="classification-toggle" className="text-sm font-medium cursor-pointer">
+              Data Classification
+            </Label>
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                className={`px-3 h-full hover:bg-gray-50 transition-colors ${
+                  showClassification ? 'text-indigo-600' : 'text-gray-300'
+                }`}
+                disabled={!showClassification}
+              >
+                <Info className="w-4 h-4" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80" side="bottom" align="end">
+              <div className="space-y-3">
+                <div>
+                  <h4 className="font-semibold text-sm mb-2">Data Classification Types</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Understanding sensitivity levels for data protection
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded bg-red-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-medium text-sm">Direct Identifier</div>
+                      <div className="text-xs text-muted-foreground">
+                        Uniquely identifies a person: email, SSN, name, phone
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded bg-orange-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-medium text-sm">Indirect Identifier</div>
+                      <div className="text-xs text-muted-foreground">
+                        Can identify when combined: DOB, address, IP, zip code
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-4 h-4 rounded bg-purple-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-medium text-sm">Sensitive Data</div>
+                      <div className="text-xs text-muted-foreground">
+                        Requires protection: salary, medical, financial data
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+        <button
           onClick={downloadImage}
-          size="sm"
-          variant="secondary"
-          className="bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white border-0"
+          disabled={isDownloading}
+          className="bg-white/90 backdrop-blur-sm shadow-lg hover:bg-white border rounded-lg w-10 h-10 flex items-center justify-center transition-all disabled:opacity-50"
+          title="Download diagram"
         >
-          <Download className="w-4 h-4 mr-2" />
-          Download
-        </Button>
+          {isDownloading ? (
+            <Check className="w-4 h-4 text-green-600" />
+          ) : (
+            <Download className="w-4 h-4 text-gray-700" />
+          )}
+        </button>
       </div>
       <ReactFlow
         nodes={nodes}

@@ -52,12 +52,12 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
-            <AuthButton />
             <Link href="/app">
               <Button className="bg-indigo-600 hover:bg-indigo-700">
                 Get Started
               </Button>
             </Link>
+            <AuthButton />
           </div>
         </div>
       </div>

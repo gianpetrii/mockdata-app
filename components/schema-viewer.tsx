@@ -41,15 +41,9 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
             {schema.tables.length} tables detected
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <ClassificationToggle 
-            enabled={showClassification}
-            onToggle={setShowClassification}
-          />
-          <Button variant="outline" onClick={handleDisconnect}>
-            Disconnect
-          </Button>
-        </div>
+        <Button variant="outline" onClick={handleDisconnect}>
+          Disconnect
+        </Button>
       </div>
 
       <div className="flex-1 flex gap-4 min-h-0">
@@ -73,6 +67,7 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
                 onTableSelect={setSelectedTable}
                 selectedTable={selectedTable}
                 showClassification={showClassification}
+                onToggleClassification={setShowClassification}
               />
             </TabsContent>
 

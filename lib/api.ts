@@ -30,6 +30,7 @@ export interface ColumnInfo {
   isPrimaryKey: boolean;
   isUnique: boolean;
   maxLength: number | null;
+  comment: string | null;
 }
 
 export interface ForeignKey {
@@ -43,6 +44,7 @@ export interface ForeignKey {
 export interface PIIDetectionResult {
   columnName: string;
   detectedType: string;
+  classification: 'direct_identifier' | 'indirect_identifier' | 'sensitive_data' | 'non_sensitive';
   confidence: 'high' | 'medium' | 'low';
   reason: string;
 }

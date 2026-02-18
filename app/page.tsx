@@ -26,17 +26,20 @@ export default function Home() {
             </p>
             <div className="flex gap-4 justify-center">
               <Link href="/app">
-                <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700">
-                  Get Started Free
-                  <ArrowRight className="ml-2 w-4 h-4" />
+                <Button size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-lg px-8 py-6">
+                  Start Anonymizing Data
+                  <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
               <Link href="/solutions">
-                <Button size="lg" variant="outline">
-                  View Solutions
+                <Button size="lg" variant="outline" className="text-lg px-8 py-6">
+                  Learn More
                 </Button>
               </Link>
             </div>
+            <p className="text-sm text-gray-500 mt-4">
+              No credit card required • Connect in 30 seconds
+            </p>
           </div>
         </div>
       </section>
