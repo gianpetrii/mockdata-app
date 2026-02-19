@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Download, Info, Check } from 'lucide-react';
 import { toPng } from 'html-to-image';
 import DatabaseTableNode from '@/components/database-table-node';
+import CustomEdge from '@/components/custom-edge';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
@@ -26,6 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { getLayoutedElements } from '@/lib/layout';
 
 interface ERDiagramProps {
   tables: TableInfo[];
@@ -37,12 +39,16 @@ interface ERDiagramProps {
 
 const edgeOptions = {
   style: { strokeWidth: 1.5, stroke: '#cbd5e1' },
-  type: 'smoothstep',
+  type: 'custom',
   markerEnd: { type: MarkerType.ArrowClosed, width: 12, height: 12, color: '#cbd5e1' },
 };
 
 const nodeTypes = {
   databaseTable: DatabaseTableNode,
+};
+
+const edgeTypes = {
+  custom: CustomEdge,
 };
 
 function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassification, onToggleClassification }: ERDiagramProps) {
@@ -76,16 +82,13 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
   
   // Convert tables to React Flow nodes with custom node type
   const initialNodes: Node[] = useMemo(() => {
-    return tables.map((table, index) => {
+    const nodes = tables.map((table) => {
       const isSelected = selectedTable === table.name;
 
       return {
         id: table.name,
         type: 'databaseTable',
-        position: {
-          x: (index % 3) * 340,
-          y: Math.floor(index / 3) * 280,
-        },
+        position: { x: 0, y: 0 }, // Will be set by layout algorithm
         data: {
           table,
           isSelected,
@@ -93,7 +96,9 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
         },
       };
     });
-  }, [tables, showClassification]);
+    
+    return nodes;
+  }, [tables, showClassification, selectedTable]);
 
   // Convert foreign keys to React Flow edges with column-specific handles
   const initialEdges: Edge[] = useMemo(() => {
@@ -109,7 +114,7 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
           target: fk.referencedTable,
           sourceHandle: fk.columnName,
           targetHandle: fk.referencedColumn,
-          type: 'smoothstep',
+          type: 'custom',
           animated: false,
           markerEnd: {
             type: MarkerType.ArrowClosed,
@@ -122,14 +127,24 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
             strokeWidth: isSelected ? 2.5 : 1.5,
             cursor: 'pointer',
           },
+          // Enable edge routing around nodes
+          pathOptions: { 
+            offset: 20,
+            borderRadius: 10,
+          },
         });
       });
     });
     return edges;
   }, [tables, selectedEdge]);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  // Apply automatic layout
+  const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(() => {
+    return getLayoutedElements(initialNodes, initialEdges, 'TB');
+  }, [initialNodes, initialEdges]);
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
 
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -256,6 +271,7 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         defaultEdgeOptions={edgeOptions}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -264,10 +280,13 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
         nodesDraggable={true}
         nodesConnectable={false}
         elementsSelectable={true}
+        edgesUpdatable={false}
+        edgesFocusable={true}
         fitView
-        minZoom={0.5}
+        minZoom={0.3}
         maxZoom={1.5}
         elevateEdgesOnSelect={true}
+        connectionLineType="default"
       >
         <Background 
           color="#f1f5f9" 
