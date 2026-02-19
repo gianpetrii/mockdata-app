@@ -1,5 +1,5 @@
 import dagre from 'dagre';
-import { Node, Edge } from 'reactflow';
+import { Node, Edge, Position } from 'reactflow';
 
 export function getLayoutedElements(
   nodes: Node[],
@@ -34,8 +34,8 @@ export function getLayoutedElements(
 
   nodes.forEach((node) => {
     const nodeWithPosition = dagreGraph.node(node.id);
-    node.targetPosition = isHorizontal ? 'left' : 'top';
-    node.sourcePosition = isHorizontal ? 'right' : 'bottom';
+    node.targetPosition = isHorizontal ? Position.Left : Position.Top;
+    node.sourcePosition = isHorizontal ? Position.Right : Position.Bottom;
 
     // We are shifting the dagre node position (anchor=center center) to the top left
     // so it matches the React Flow node anchor point (top left).

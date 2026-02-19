@@ -127,11 +127,6 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
             strokeWidth: isSelected ? 2.5 : 1.5,
             cursor: 'pointer',
           },
-          // Enable edge routing around nodes
-          pathOptions: { 
-            offset: 20,
-            borderRadius: 10,
-          },
         });
       });
     });
@@ -286,7 +281,6 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
         minZoom={0.3}
         maxZoom={1.5}
         elevateEdgesOnSelect={true}
-        connectionLineType="default"
       >
         <Background 
           color="#f1f5f9" 
