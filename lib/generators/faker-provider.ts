@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { PIIType } from '@/lib/db/pii-detector';
+import { PIIType } from '@/lib/db/pii-detector-enhanced';
 
 export class FakerProvider {
   /**
@@ -18,6 +18,7 @@ export class FakerProvider {
 
     // Generate based on PII type
     switch (piiType) {
+      // Personal Identifiers
       case 'email':
         return faker.internet.email();
       case 'phone':
@@ -31,14 +32,110 @@ export class FakerProvider {
         if (columnName.toLowerCase().includes('city')) return faker.location.city();
         if (columnName.toLowerCase().includes('country')) return faker.location.country();
         return faker.location.streetAddress();
+      case 'ssn':
+        return faker.string.numeric(9);
+      case 'passport':
+        return faker.string.alphanumeric(9).toUpperCase();
+      case 'driver_license':
+        return faker.string.alphanumeric(12).toUpperCase();
       case 'date_of_birth':
         return faker.date.birthdate({ min: 18, max: 80, mode: 'age' });
       case 'ip_address':
         return faker.internet.ip();
+      case 'username':
+        return faker.internet.username();
+      case 'password':
+        return faker.internet.password({ length: 16 });
+      
+      // Financial
       case 'credit_card':
         return faker.finance.creditCardNumber();
-      case 'ssn':
+      case 'bank_account':
+        return faker.finance.accountNumber();
+      case 'iban':
+        return faker.finance.iban();
+      case 'swift_code':
+        return faker.finance.bic();
+      case 'routing_number':
         return faker.string.numeric(9);
+      case 'salary':
+        return faker.number.int({ min: 30000, max: 200000 });
+      case 'income':
+        return faker.number.int({ min: 20000, max: 300000 });
+      case 'tax_id':
+        return faker.string.numeric(10);
+      case 'vat_number':
+        return `${faker.location.countryCode()}${faker.string.numeric(9)}`;
+      
+      // Medical/Health
+      case 'medical_record':
+        return `MRN${faker.string.numeric(8)}`;
+      case 'diagnosis':
+        return faker.helpers.arrayElement(['Hypertension', 'Diabetes Type 2', 'Asthma', 'Arthritis', 'Migraine']);
+      case 'prescription':
+        return faker.helpers.arrayElement(['Metformin 500mg', 'Lisinopril 10mg', 'Atorvastatin 20mg', 'Omeprazole 20mg']);
+      case 'blood_type':
+        return faker.helpers.arrayElement(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']);
+      case 'insurance_number':
+        return `INS${faker.string.numeric(10)}`;
+      case 'patient_id':
+        return `PT${faker.string.numeric(8)}`;
+      
+      // Biometric
+      case 'fingerprint':
+        return faker.string.hexadecimal({ length: 64 });
+      case 'face_id':
+        return faker.string.hexadecimal({ length: 32 });
+      case 'biometric_data':
+        return faker.string.hexadecimal({ length: 128 });
+      
+      // Location
+      case 'gps_coordinates':
+        return `${faker.location.latitude()},${faker.location.longitude()}`;
+      case 'geolocation':
+        return { lat: faker.location.latitude(), lng: faker.location.longitude() };
+      case 'latitude':
+        return faker.location.latitude();
+      case 'longitude':
+        return faker.location.longitude();
+      
+      // Digital Identity
+      case 'device_id':
+        return faker.string.uuid();
+      case 'mac_address':
+        return faker.internet.mac();
+      case 'session_token':
+        return faker.string.alphanumeric(32);
+      case 'api_key':
+        return `sk_${faker.string.alphanumeric(48)}`;
+      case 'oauth_token':
+        return faker.string.alphanumeric(64);
+      
+      // Sensitive Personal
+      case 'race':
+      case 'ethnicity':
+        return faker.helpers.arrayElement(['Asian', 'Black', 'Hispanic', 'White', 'Other', 'Prefer not to say']);
+      case 'religion':
+        return faker.helpers.arrayElement(['Christianity', 'Islam', 'Hinduism', 'Buddhism', 'Judaism', 'Other', 'None']);
+      case 'political_affiliation':
+        return faker.helpers.arrayElement(['Liberal', 'Conservative', 'Independent', 'Other', 'Prefer not to say']);
+      case 'sexual_orientation':
+        return faker.helpers.arrayElement(['Heterosexual', 'Homosexual', 'Bisexual', 'Other', 'Prefer not to say']);
+      case 'gender_identity':
+        return faker.helpers.arrayElement(['Male', 'Female', 'Non-binary', 'Other', 'Prefer not to say']);
+      case 'criminal_record':
+        return faker.helpers.arrayElement(['None', 'Misdemeanor', 'Felony']);
+      
+      // Other Sensitive
+      case 'signature':
+        return faker.string.alphanumeric(64);
+      case 'photo':
+        return faker.image.avatar();
+      case 'video':
+        return `video_${faker.string.alphanumeric(16)}.mp4`;
+      case 'voice_recording':
+        return `audio_${faker.string.alphanumeric(16)}.mp3`;
+      
       default:
         return this.generateByDataType(columnName, dataType);
     }

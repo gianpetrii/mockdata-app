@@ -1,81 +1,60 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DatabaseSchema } from '@/lib/api';
+import { ExampleGenerator, SmartExample } from '@/lib/generators/example-generator';
 
-interface PromptExample {
-  title: string;
-  description: string;
-  prompt: string;
-  category: 'basic' | 'qa' | 'advanced';
-}
-
-const EXAMPLES: PromptExample[] = [
-  {
-    title: 'Basic Generation',
-    description: 'Simple data generation with quantity',
-    prompt: 'Generate 100 users with realistic data',
-    category: 'basic',
-  },
+const GENERIC_EXAMPLES: SmartExample[] = [
   {
     title: 'Distribution Testing',
     description: 'Test status distributions',
-    prompt: `Generate 100 orders where:
+    prompt: `Generate 100 records where:
 - 70% have status 'completed'
 - 20% have status 'pending'
-- 10% have status 'cancelled'
-- All created in the last 30 days`,
+- 10% have status 'cancelled'`,
     category: 'qa',
-  },
-  {
-    title: 'Edge Cases',
-    description: 'Test boundary conditions',
-    prompt: `Generate test data for checkout flow:
-- 10 users with no orders (new users)
-- 5 users with abandoned cart (status 'pending' > 24h)
-- 3 VIP users with more than 10 completed orders`,
-    category: 'qa',
+    relevance: 5,
   },
   {
     title: 'Range Constraints',
     description: 'Specific value ranges',
-    prompt: `Generate 50 products where:
-- Price between $10 and $500
-- Stock quantity between 0 and 100
-- 30% have stock = 0 (out of stock scenario)`,
+    prompt: `Generate 50 records where:
+- Numeric field between 10 and 500
+- 30% have value < 50
+- 10% have value > 300`,
     category: 'qa',
+    relevance: 5,
   },
   {
     title: 'Pattern Matching',
     description: 'Specific patterns for testing',
-    prompt: `Generate 50 users where:
-- 30 users with @company.com emails
-- 20 users with other email domains
+    prompt: `Generate 50 records where:
+- Email field with @company.com domain
 - Ages between 25-45`,
     category: 'advanced',
-  },
-  {
-    title: 'Relationship Testing',
-    description: 'Test foreign key relationships',
-    prompt: `Generate orders with relationships:
-- 50 orders distributed across existing users
-- Each user should have between 1-5 orders
-- Order total amounts between $50-$500`,
-    category: 'advanced',
+    relevance: 4,
   },
 ];
 
 interface PromptExamplesProps {
   onSelectExample: (prompt: string) => void;
+  schema: DatabaseSchema;
 }
 
-export default function PromptExamples({ onSelectExample }: PromptExamplesProps) {
+export default function PromptExamples({ onSelectExample, schema }: PromptExamplesProps) {
+  const examples = useMemo(() => {
+    const smartExamples = ExampleGenerator.generateExamples(schema);
+    return [...smartExamples, ...GENERIC_EXAMPLES].sort((a, b) => b.relevance - a.relevance);
+  }, [schema]);
+
   return (
     <div className="space-y-4">
       <h4 className="text-sm font-semibold text-muted-foreground">Example Prompts</h4>
       
       <div className="grid gap-3">
-        {EXAMPLES.map((example, idx) => (
+        {examples.slice(0, 6).map((example, idx) => (
           <Card key={idx} className="p-3 hover:bg-gray-50 transition-colors">
             <div className="flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">

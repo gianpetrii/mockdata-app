@@ -33,7 +33,7 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
 
   const handleSelectExample = (examplePrompt: string) => {
     setPrompt(examplePrompt);
-    setShowExamples(false);
+    // Don't hide examples or auto-submit - let user edit first
   };
 
   const handleGeneratePlan = async () => {
@@ -124,15 +124,13 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
             <Sparkles className="h-5 w-5 text-blue-500" />
             Generate Mock Data
           </h3>
-          {!showExamples && (
-            <Button
-              onClick={() => setShowExamples(!showExamples)}
-              variant="ghost"
-              size="sm"
-            >
-              {showExamples ? 'Hide' : 'Show'} Examples
-            </Button>
-          )}
+          <Button
+            onClick={() => setShowExamples(!showExamples)}
+            variant="ghost"
+            size="sm"
+          >
+            {showExamples ? 'Hide' : 'Show'} Examples
+          </Button>
         </div>
         
         <div className="space-y-3">
@@ -162,7 +160,7 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
 
         {showExamples && (
           <div className="mt-4 pt-4 border-t">
-            <PromptExamples onSelectExample={handleSelectExample} />
+            <PromptExamples onSelectExample={handleSelectExample} schema={schema} />
           </div>
         )}
       </Card>

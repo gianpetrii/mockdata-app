@@ -1,7 +1,7 @@
 import { DatabaseSchema, TableInfo, ColumnInfo } from '@/lib/api';
 import { GenerationPlan, TableGenerationSpec, GenerationResult } from './types';
 import { FakerProvider } from './faker-provider';
-import { PIIDetector } from '@/lib/db/pii-detector';
+import { EnhancedPIIDetector } from '@/lib/db/pii-detector-enhanced';
 
 export class DataGenerator {
   /**
@@ -45,7 +45,7 @@ export class DataGenerator {
     existingData: Map<string, any[]>
   ): any[] {
     const rows: any[] = [];
-    const piiResults = PIIDetector.detectPII(tableInfo.columns);
+    const piiResults = EnhancedPIIDetector.detectPIISync(tableInfo.columns);
 
     for (let i = 0; i < tableSpec.count; i++) {
       const row: Record<string, any> = {};

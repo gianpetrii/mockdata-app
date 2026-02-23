@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { connections } from '../connect/route';
 import { DatabaseIntrospector } from '@/lib/db/introspector';
-import { PIIDetector } from '@/lib/db/pii-detector';
+import { EnhancedPIIDetector } from '@/lib/db/pii-detector-enhanced';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,9 +21,11 @@ export async function GET(request: NextRequest) {
     const introspector = new DatabaseIntrospector(knex, dbType);
     const schema = await introspector.getSchema();
 
+    // Use synchronous detection for speed (regex-based)
+    // LLM fallback can be enabled later for ambiguous cases
     const schemaWithPII = {
       tables: schema.tables.map(table => {
-        const piiDetection = PIIDetector.detectPII(table.columns);
+        const piiDetection = EnhancedPIIDetector.detectPIISync(table.columns);
         return {
           ...table,
           piiDetection,

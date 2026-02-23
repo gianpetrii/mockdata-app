@@ -9,6 +9,7 @@ import ERDiagram from '@/components/er-diagram';
 import TableDetails from '@/components/table-details';
 import ClassificationToggle from '@/components/classification-toggle';
 import DataGeneratorPanel from '@/components/data-generator-panel';
+import DataAnonymizationPanel from '@/components/data-anonymization-panel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SchemaViewerProps {
@@ -61,6 +62,7 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
               <TabsTrigger value="diagram">ER Diagram</TabsTrigger>
               <TabsTrigger value="details">Table Details</TabsTrigger>
               <TabsTrigger value="generate">Generate Data</TabsTrigger>
+              <TabsTrigger value="anonymize">Anonymize Data</TabsTrigger>
             </TabsList>
 
             <TabsContent value="diagram" className="flex-1 min-h-0 mt-0">
@@ -88,6 +90,10 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
 
             <TabsContent value="generate" className="flex-1 overflow-auto mt-0">
               <DataGeneratorPanel schema={schema} />
+            </TabsContent>
+
+            <TabsContent value="anonymize" className="flex-1 overflow-auto mt-0">
+              <DataAnonymizationPanel schema={schema} />
             </TabsContent>
           </Tabs>
         </div>
