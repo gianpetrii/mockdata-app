@@ -8,6 +8,7 @@ import TableSidebar from '@/components/table-sidebar';
 import ERDiagram from '@/components/er-diagram';
 import TableDetails from '@/components/table-details';
 import ClassificationToggle from '@/components/classification-toggle';
+import DataGeneratorPanel from '@/components/data-generator-panel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface SchemaViewerProps {
@@ -59,6 +60,7 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
             <TabsList className="mb-4">
               <TabsTrigger value="diagram">ER Diagram</TabsTrigger>
               <TabsTrigger value="details">Table Details</TabsTrigger>
+              <TabsTrigger value="generate">Generate Data</TabsTrigger>
             </TabsList>
 
             <TabsContent value="diagram" className="flex-1 min-h-0 mt-0">
@@ -82,6 +84,10 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
                   Select a table from the sidebar
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="generate" className="flex-1 overflow-auto mt-0">
+              <DataGeneratorPanel schema={schema} />
             </TabsContent>
           </Tabs>
         </div>

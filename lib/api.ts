@@ -135,6 +135,60 @@ class ApiClient {
 
     return response.json();
   }
+
+  async generatePlan(prompt: string, schema: DatabaseSchema): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/generate/plan`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-session-id': getSessionId(),
+      },
+      body: JSON.stringify({ prompt, schema }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to generate plan');
+    }
+
+    return response.json();
+  }
+
+  async generatePreview(plan: any, schema: DatabaseSchema): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/generate/preview`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-session-id': getSessionId(),
+      },
+      body: JSON.stringify({ plan, schema }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to generate preview');
+    }
+
+    return response.json();
+  }
+
+  async executeGeneration(plan: any, schema: DatabaseSchema, executeInDb: boolean = false): Promise<any> {
+    const response = await fetch(`${this.baseUrl}/generate/execute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-session-id': getSessionId(),
+      },
+      body: JSON.stringify({ plan, schema, executeInDb }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to execute generation');
+    }
+
+    return response.json();
+  }
 }
 
 export const api = new ApiClient();
