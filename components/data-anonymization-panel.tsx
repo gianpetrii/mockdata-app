@@ -216,8 +216,7 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
         <Alert className="mb-4">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            This feature will <strong>modify existing data</strong> in your database. 
-            Always preview and download SQL before executing. This action cannot be undone.
+            This will read sample data from your database to detect PII and suggest anonymization strategies. No data will be modified yet.
           </AlertDescription>
         </Alert>
 
@@ -316,7 +315,14 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
             ))}
           </div>
 
-          <div className="flex gap-2 mt-4">
+          <Alert className="mt-4 mb-3" variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Execute Anonymization will modify existing data in your database. Always preview and download SQL before executing. This action cannot be undone.
+            </AlertDescription>
+          </Alert>
+
+          <div className="flex gap-2">
             <Button
               onClick={handlePreview}
               disabled={loading}

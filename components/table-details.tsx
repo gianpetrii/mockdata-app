@@ -26,7 +26,8 @@ export default function TableDetails({ table, showClassification }: TableDetails
   const piiColumns = table.piiDetection.filter(p => p.detectedType !== 'none').length;
 
   return (
-    <div className="p-6 overflow-y-auto bg-slate-50">
+    <div className="h-full overflow-y-auto bg-slate-50">
+      <div className="p-6">
       {/* Header */}
       <div className="mb-6 bg-white p-6 rounded-lg border">
         <h2 className="text-2xl font-bold mb-3">{table.name}</h2>
@@ -190,6 +191,7 @@ export default function TableDetails({ table, showClassification }: TableDetails
           )}
         </div>
       )}
+      </div>
     </div>
   );
 }
