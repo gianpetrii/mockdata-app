@@ -98,7 +98,7 @@ export class EnhancedPIIDetector {
     password: [/^password$/i, /^passwd$/i, /^pwd$/i, /^pass$/i, /_password$/i, /^encrypted_?password$/i, /^password_?hash$/i],
     
     // Financial
-    credit_card: [/^card_?number$/i, /^credit_?card$/i, /^cc_?number$/i, /^card_?no$/i, /^pan$/i],
+    credit_card: [/^card_?number$/i, /^credit_?card$/i, /^cc_?number$/i, /^card_?no$/i, /^pan$/i, /^card_?brand$/i, /^card_?last/i, /last_?four$/i, /last_?digits$/i],
     bank_account: [/^account_?number$/i, /^bank_?account$/i, /^account_?no$/i],
     iban: [/^iban$/i, /^iban_?number$/i],
     swift_code: [/^swift$/i, /^swift_?code$/i, /^bic$/i],

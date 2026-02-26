@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connections } from '../../db/connect/route';
+import { connections } from '@/lib/db/connection-store';
 import { DatabaseSchema } from '@/lib/api';
 import { DataReader } from '@/lib/anonymization/data-reader';
 

@@ -170,7 +170,12 @@ export class FakerProvider {
         return `${faker.string.alphanumeric(8)}${value}`;
 
       case 'percentage':
-        return this.generateFromPercentageDistribution(value);
+        const distributedValue = this.generateFromPercentageDistribution(value);
+        // Convert to boolean if column is boolean type
+        if (dataType.includes('bool')) {
+          return distributedValue === 'true' || distributedValue === 'active' || distributedValue === '1' || distributedValue === 1 || distributedValue === true;
+        }
+        return distributedValue;
 
       default:
         return this.generateByDataType(columnName, dataType);
@@ -194,26 +199,17 @@ export class FakerProvider {
   private static generateByDataType(columnName: string, dataType: string): any {
     const lowerName = columnName.toLowerCase();
 
-    // Common column name patterns
-    if (lowerName.includes('email')) return faker.internet.email();
-    if (lowerName.includes('phone')) return faker.phone.number();
-    if (lowerName.includes('url') || lowerName.includes('website')) return faker.internet.url();
-    if (lowerName.includes('company')) return faker.company.name();
-    if (lowerName.includes('title') || lowerName.includes('position')) return faker.person.jobTitle();
-    if (lowerName.includes('description')) return faker.lorem.paragraph();
-    if (lowerName.includes('price') || lowerName.includes('amount')) return faker.number.float({ min: 10, max: 1000, fractionDigits: 2 });
-    if (lowerName.includes('quantity') || lowerName.includes('count')) return faker.number.int({ min: 1, max: 100 });
-    if (lowerName.includes('status')) return faker.helpers.arrayElement(['active', 'inactive', 'pending']);
-
-    // Fallback to data type
+    // Check data type first to avoid type mismatches
+    if (dataType.includes('bool')) {
+      return faker.datatype.boolean();
+    }
     if (dataType.includes('int') || dataType.includes('serial')) {
+      if (lowerName.includes('quantity') || lowerName.includes('count')) return faker.number.int({ min: 1, max: 100 });
       return faker.number.int({ min: 1, max: 100000 });
     }
     if (dataType.includes('numeric') || dataType.includes('decimal') || dataType.includes('float')) {
+      if (lowerName.includes('price') || lowerName.includes('amount')) return faker.number.float({ min: 10, max: 1000, fractionDigits: 2 });
       return faker.number.float({ min: 0, max: 10000, fractionDigits: 2 });
-    }
-    if (dataType.includes('bool')) {
-      return faker.datatype.boolean();
     }
     if (dataType.includes('date') || dataType.includes('timestamp')) {
       return faker.date.recent({ days: 365 });
@@ -224,6 +220,17 @@ export class FakerProvider {
     if (dataType.includes('uuid')) {
       return faker.string.uuid();
     }
+
+    // Common column name patterns (only for string types)
+    if (lowerName.includes('email')) return faker.internet.email();
+    if (lowerName.includes('phone')) return faker.phone.number();
+    if (lowerName.includes('url') || lowerName.includes('website')) return faker.internet.url();
+    if (lowerName.includes('company')) return faker.company.name();
+    if (lowerName.includes('title') || lowerName.includes('position')) return faker.person.jobTitle();
+    if (lowerName.includes('description')) return faker.lorem.paragraph();
+    if (lowerName.includes('status')) return faker.helpers.arrayElement(['active', 'inactive', 'pending']);
+
+    // Text types
     if (dataType.includes('text') || dataType.includes('varchar') || dataType.includes('char')) {
       if (lowerName.includes('name')) return faker.person.fullName();
       if (lowerName.includes('city')) return faker.location.city();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import ReactFlow, {
   Node,
   Edge,
@@ -12,6 +12,7 @@ import ReactFlow, {
   MarkerType,
   useReactFlow,
   ReactFlowProvider,
+  Viewport,
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { TableInfo } from '@/lib/api';
@@ -52,10 +53,10 @@ const edgeTypes = {
 };
 
 function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassification, onToggleClassification }: ERDiagramProps) {
-  const { getNodes } = useReactFlow();
+  const { getNodes, setViewport, getViewport } = useReactFlow();
   const [selectedEdge, setSelectedEdge] = useState<string | null>(null);
-
   const [isDownloading, setIsDownloading] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const downloadImage = useCallback(() => {
     const viewport = document.querySelector('.react-flow__viewport') as HTMLElement;
@@ -133,13 +134,64 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
     return edges;
   }, [tables, selectedEdge]);
 
-  // Apply automatic layout
+  // Apply automatic layout only on first load or restore saved positions
   const { nodes: layoutedNodes, edges: layoutedEdges } = useMemo(() => {
+    const savedState = sessionStorage.getItem('er-diagram-state');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        const restoredNodes = initialNodes.map(node => {
+          const savedNode = parsed.nodes?.find((n: any) => n.id === node.id);
+          return savedNode ? { ...node, position: savedNode.position } : node;
+        });
+        return { nodes: restoredNodes, edges: initialEdges };
+      } catch (e) {
+        console.error('Failed to restore diagram state:', e);
+      }
+    }
+    
     return getLayoutedElements(initialNodes, initialEdges, 'TB');
   }, [initialNodes, initialEdges]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutedEdges);
+
+  // Restore viewport on mount
+  useEffect(() => {
+    const savedState = sessionStorage.getItem('er-diagram-state');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.viewport) {
+          setViewport(parsed.viewport, { duration: 0 });
+        }
+      } catch (e) {
+        console.error('Failed to restore viewport:', e);
+      }
+    }
+    setHasInitialized(true);
+  }, [setViewport]);
+
+  // Save viewport and node positions whenever they change
+  useEffect(() => {
+    if (!hasInitialized) return;
+    
+    const saveState = () => {
+      const viewport = getViewport();
+      const state = {
+        nodes: nodes.map(n => ({ 
+          id: n.id, 
+          position: n.position,
+        })),
+        viewport,
+      };
+      sessionStorage.setItem('er-diagram-state', JSON.stringify(state));
+    };
+
+    // Debounce saves to avoid too many writes
+    const timeoutId = setTimeout(saveState, 100);
+    return () => clearTimeout(timeoutId);
+  }, [nodes, hasInitialized, getViewport]);
 
   const onNodeClick = useCallback(
     (_event: React.MouseEvent, node: Node) => {
@@ -179,6 +231,7 @@ function ERDiagramInner({ tables, onTableSelect, selectedTable, showClassificati
   useMemo(() => {
     setEdges(initialEdges);
   }, [initialEdges, setEdges]);
+
 
   return (
     <div className="w-full h-full bg-white rounded-lg relative overflow-hidden">

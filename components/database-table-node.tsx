@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useState } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 import { Key, Link2, ChevronDown, ChevronUp } from 'lucide-react';
 import { TableInfo } from '@/lib/api';
@@ -11,9 +11,20 @@ interface TableNodeData {
   showClassification: boolean;
 }
 
-function DatabaseTableNode({ data, selected }: NodeProps<TableNodeData>) {
+function DatabaseTableNode({ data, selected, id }: NodeProps<TableNodeData>) {
   const { table, isSelected, showClassification } = data;
-  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // Restore expanded state from sessionStorage
+  const [isExpanded, setIsExpanded] = useState(() => {
+    const saved = sessionStorage.getItem(`table-expanded-${id}`);
+    return saved === 'true';
+  });
+  
+  // Save expanded state whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem(`table-expanded-${id}`, String(isExpanded));
+  }, [isExpanded, id]);
+  
   const displayColumns = isExpanded ? table.columns : table.columns.slice(0, 6);
   const hasMore = table.columns.length > 6;
 

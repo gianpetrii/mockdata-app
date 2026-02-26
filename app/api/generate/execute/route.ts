@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { DataGenerator } from '@/lib/generators/data-generator';
 import { DatabaseSchema } from '@/lib/api';
 import { GenerationPlan } from '@/lib/generators/types';
-import { connections } from '../../db/connect/route';
+import { connections } from '@/lib/db/connection-store';
 
 export async function POST(request: NextRequest) {
   try {

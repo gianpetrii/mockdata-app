@@ -8,6 +8,13 @@ import { ExampleGenerator, SmartExample } from '@/lib/generators/example-generat
 
 const GENERIC_EXAMPLES: SmartExample[] = [
   {
+    title: 'Basic Generation',
+    description: 'Simple data generation',
+    prompt: 'Generate 100 records with realistic data',
+    category: 'basic',
+    relevance: 3,
+  },
+  {
     title: 'Distribution Testing',
     description: 'Test status distributions',
     prompt: `Generate 100 records where:
@@ -15,7 +22,17 @@ const GENERIC_EXAMPLES: SmartExample[] = [
 - 20% have status 'pending'
 - 10% have status 'cancelled'`,
     category: 'qa',
-    relevance: 5,
+    relevance: 3,
+  },
+  {
+    title: 'Edge Cases',
+    description: 'Test boundary conditions',
+    prompt: `Generate edge case data:
+- 10 records with minimum values
+- 10 records with maximum values
+- 5 records with NULL fields`,
+    category: 'qa',
+    relevance: 3,
   },
   {
     title: 'Range Constraints',
@@ -25,16 +42,25 @@ const GENERIC_EXAMPLES: SmartExample[] = [
 - 30% have value < 50
 - 10% have value > 300`,
     category: 'qa',
-    relevance: 5,
+    relevance: 3,
   },
   {
     title: 'Pattern Matching',
     description: 'Specific patterns for testing',
     prompt: `Generate 50 records where:
 - Email field with @company.com domain
-- Ages between 25-45`,
+- Phone numbers with specific format`,
     category: 'advanced',
-    relevance: 4,
+    relevance: 3,
+  },
+  {
+    title: 'Relationship Testing',
+    description: 'Test foreign key relationships',
+    prompt: `Generate data with relationships:
+- Parent records with 1-5 child records each
+- Maintain referential integrity`,
+    category: 'advanced',
+    relevance: 3,
   },
 ];
 

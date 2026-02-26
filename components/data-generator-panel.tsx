@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Download, Database, AlertTriangle, CheckCircle2, Sparkles } from 'lucide-react';
+import { Loader2, Download, Database, AlertTriangle, CheckCircle2, Sparkles, X } from 'lucide-react';
 import { DatabaseSchema, api } from '@/lib/api';
 import { GenerationPlan } from '@/lib/generators/types';
 import PromptExamples from '@/components/prompt-examples';
@@ -30,10 +30,21 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
   const [executing, setExecuting] = useState(false);
   const [executionResult, setExecutionResult] = useState<any>(null);
   const [showExamples, setShowExamples] = useState(true);
+  
+  const planRef = useRef<HTMLDivElement>(null);
+  const sqlRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
 
   const handleSelectExample = (examplePrompt: string) => {
     setPrompt(examplePrompt);
     // Don't hide examples or auto-submit - let user edit first
+  };
+
+  // Scroll to element with smooth behavior and margin
+  const scrollToElement = (ref: React.RefObject<HTMLDivElement | null>) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   const handleGeneratePlan = async () => {
@@ -49,12 +60,17 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
       const data = await api.generatePlan(prompt, schema);
       setPlan(data.plan);
       setValidationErrors(data.validationErrors || []);
+      setShowExamples(false);
+      
+      // Scroll to plan after a short delay
+      setTimeout(() => scrollToElement(planRef), 300);
     } catch (error) {
       console.error('Error generating plan:', error);
       setValidationErrors([{
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to generate plan',
       }]);
+      setTimeout(() => scrollToElement(errorRef), 300);
     } finally {
       setLoading(false);
     }
@@ -67,12 +83,16 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
     try {
       const data = await api.generatePreview(plan, schema);
       setGeneratedSQL(data.result.sql);
+      
+      // Scroll to SQL preview
+      setTimeout(() => scrollToElement(sqlRef), 300);
     } catch (error) {
       console.error('Error generating preview:', error);
       setValidationErrors([{
         type: 'error',
         message: error instanceof Error ? error.message : 'Failed to generate preview',
       }]);
+      setTimeout(() => scrollToElement(errorRef), 300);
     } finally {
       setLoading(false);
     }
@@ -88,12 +108,18 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
       const data = await api.executeGeneration(plan, schema, true);
       setExecutionResult(data);
       setGeneratedSQL(data.result.sql);
+      
+      // Scroll to result
+      setTimeout(() => scrollToElement(errorRef), 300);
     } catch (error) {
       console.error('Error executing generation:', error);
       setExecutionResult({
         success: false,
         error: error instanceof Error ? error.message : 'Failed to execute',
       });
+      
+      // Scroll to error
+      setTimeout(() => scrollToElement(errorRef), 300);
     } finally {
       setExecuting(false);
     }
@@ -117,7 +143,7 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
   const hasWarnings = validationErrors.some(e => e.type === 'warning');
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex flex-col gap-4 h-full pb-8">
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -166,7 +192,7 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
       </Card>
 
       {validationErrors.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2" ref={errorRef}>
           {validationErrors.map((error, idx) => (
             <Alert key={idx} variant={error.type === 'error' ? 'destructive' : 'default'}>
               <AlertTriangle className="h-4 w-4" />
@@ -181,7 +207,7 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
       )}
 
       {plan && (
-        <Card className="p-4">
+        <Card className="p-4" ref={planRef}>
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-semibold">Generation Plan</h4>
             <Badge variant="outline">{plan.estimatedRows} rows</Badge>
@@ -268,8 +294,45 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
         </Card>
       )}
 
+      {executionResult && (
+        <Card className="p-4 border-2" ref={errorRef}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              {executionResult.success ? (
+                <>
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <h4 className="font-semibold text-green-900">Success!</h4>
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                  <h4 className="font-semibold text-red-900">Execution Error</h4>
+                </>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setExecutionResult(null)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {executionResult.success ? (
+            <p className="text-sm text-green-800">{executionResult.message}</p>
+          ) : (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <pre className="text-xs font-mono text-red-900 overflow-auto max-h-64 whitespace-pre-wrap resize-y">
+                {executionResult.error}
+              </pre>
+            </div>
+          )}
+        </Card>
+      )}
+
       {generatedSQL && (
-        <Card className="p-4">
+        <Card className="p-4" ref={sqlRef}>
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-semibold">Generated SQL</h4>
             <Button
@@ -289,21 +352,36 @@ export default function DataGeneratorPanel({ schema }: DataGeneratorPanelProps) 
       )}
 
       {executionResult && (
-        <Alert variant={executionResult.success ? 'default' : 'destructive'}>
+        <Alert 
+          variant={executionResult.success ? 'default' : 'destructive'}
+          className="relative"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute top-2 right-2 h-6 w-6 p-0"
+            onClick={() => setExecutionResult(null)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
           {executionResult.success ? (
             <CheckCircle2 className="h-4 w-4" />
           ) : (
             <AlertTriangle className="h-4 w-4" />
           )}
-          <AlertDescription>
+          <AlertDescription className="pr-8">
             {executionResult.success ? (
-              <span>
-                <span className="font-medium">Success!</span> {executionResult.message}
-              </span>
+              <div>
+                <p className="font-medium">Success!</p>
+                <p className="text-sm mt-1">{executionResult.message}</p>
+              </div>
             ) : (
-              <span>
-                <span className="font-medium">Error:</span> {executionResult.error}
-              </span>
+              <div>
+                <p className="font-medium">Error</p>
+                <p className="text-sm mt-1 font-mono text-xs whitespace-pre-wrap">
+                  {executionResult.error}
+                </p>
+              </div>
             )}
           </AlertDescription>
         </Alert>

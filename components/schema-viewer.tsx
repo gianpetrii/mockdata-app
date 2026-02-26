@@ -7,7 +7,6 @@ import { api } from '@/lib/api';
 import TableSidebar from '@/components/table-sidebar';
 import ERDiagram from '@/components/er-diagram';
 import TableDetails from '@/components/table-details';
-import ClassificationToggle from '@/components/classification-toggle';
 import DataGeneratorPanel from '@/components/data-generator-panel';
 import DataAnonymizationPanel from '@/components/data-anonymization-panel';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -22,6 +21,7 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
     schema?.tables[0]?.name || null
   );
   const [showClassification, setShowClassification] = useState(false);
+  const [activeTab, setActiveTab] = useState('diagram');
 
   const handleDisconnect = async () => {
     await api.disconnect();
@@ -57,44 +57,47 @@ export default function SchemaViewer({ schema, onDisconnect }: SchemaViewerProps
         />
 
         <div className="flex-1 flex flex-col min-w-0">
-          <Tabs defaultValue="diagram" className="flex-1 flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
             <TabsList className="mb-4">
-              <TabsTrigger value="diagram">ER Diagram</TabsTrigger>
               <TabsTrigger value="details">Table Details</TabsTrigger>
+              <TabsTrigger value="diagram">ER Diagram</TabsTrigger>
               <TabsTrigger value="generate">Generate Data</TabsTrigger>
               <TabsTrigger value="anonymize">Anonymize Data</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="diagram" className="flex-1 min-h-0 mt-0">
-              <ERDiagram
-                tables={schema.tables}
-                onTableSelect={setSelectedTable}
-                selectedTable={selectedTable}
-                showClassification={showClassification}
-                onToggleClassification={setShowClassification}
-              />
-            </TabsContent>
+            <div className="flex-1 min-h-0 relative">
+              {/* Keep all tabs mounted but hide inactive ones */}
+              <div className={`absolute inset-0 overflow-hidden ${activeTab === 'details' ? 'block' : 'hidden'}`}>
+                {selectedTableData ? (
+                  <TableDetails 
+                    table={selectedTableData}
+                    showClassification={showClassification}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-muted-foreground">
+                    Select a table from the sidebar
+                  </div>
+                )}
+              </div>
 
-            <TabsContent value="details" className="flex-1 overflow-hidden mt-0">
-              {selectedTableData ? (
-                <TableDetails 
-                  table={selectedTableData}
+              <div className={`absolute inset-0 ${activeTab === 'diagram' ? 'block' : 'hidden'}`}>
+                <ERDiagram
+                  tables={schema.tables}
+                  onTableSelect={setSelectedTable}
+                  selectedTable={selectedTable}
                   showClassification={showClassification}
+                  onToggleClassification={setShowClassification}
                 />
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground">
-                  Select a table from the sidebar
-                </div>
-              )}
-            </TabsContent>
+              </div>
 
-            <TabsContent value="generate" className="flex-1 overflow-auto mt-0">
-              <DataGeneratorPanel schema={schema} />
-            </TabsContent>
+              <div className={`absolute inset-0 overflow-auto ${activeTab === 'generate' ? 'block' : 'hidden'}`}>
+                <DataGeneratorPanel schema={schema} />
+              </div>
 
-            <TabsContent value="anonymize" className="flex-1 overflow-auto mt-0">
-              <DataAnonymizationPanel schema={schema} />
-            </TabsContent>
+              <div className={`absolute inset-0 overflow-auto ${activeTab === 'anonymize' ? 'block' : 'hidden'}`}>
+                <DataAnonymizationPanel schema={schema} />
+              </div>
+            </div>
           </Tabs>
         </div>
       </div>

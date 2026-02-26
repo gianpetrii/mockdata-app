@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { connections } from '../../db/connect/route';
+import { connections } from '@/lib/db/connection-store';
 import { AnonymizationPlan } from '@/lib/anonymization/types';
 import { AnonymizationExecutor } from '@/lib/anonymization/executor';
 

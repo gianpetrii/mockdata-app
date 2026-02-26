@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Shield, Download, AlertTriangle, CheckCircle2, Eye } from 'lucide-react';
+import { Loader2, Shield, Download, AlertTriangle, CheckCircle2, Eye, X } from 'lucide-react';
 import { DatabaseSchema, api } from '@/lib/api';
 import { AnonymizationPlan, AnonymizationStrategy } from '@/lib/anonymization/types';
 
@@ -35,6 +35,16 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
   const [previewSQL, setPreviewSQL] = useState<string | null>(null);
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<any>(null);
+
+  const planRef = useRef<HTMLDivElement>(null);
+  const sqlRef = useRef<HTMLDivElement>(null);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  const scrollToElement = (ref: React.RefObject<HTMLDivElement | null>) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  };
 
   const handleAnalyze = async () => {
     setAnalyzing(true);
@@ -75,9 +85,16 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
       }
 
       setPlan(planData.plan);
+      
+      // Scroll to plan
+      setTimeout(() => scrollToElement(planRef), 300);
     } catch (error) {
       console.error('Error analyzing:', error);
-      alert(error instanceof Error ? error.message : 'Failed to analyze');
+      setResult({
+        success: false,
+        errors: [error instanceof Error ? error.message : 'Failed to analyze'],
+      });
+      setTimeout(() => scrollToElement(resultRef), 300);
     } finally {
       setAnalyzing(false);
     }
@@ -112,9 +129,16 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
       }
 
       setPreviewSQL(data.result.sql);
+      
+      // Scroll to SQL
+      setTimeout(() => scrollToElement(sqlRef), 300);
     } catch (error) {
       console.error('Error previewing:', error);
-      alert(error instanceof Error ? error.message : 'Failed to preview');
+      setResult({
+        success: false,
+        errors: [error instanceof Error ? error.message : 'Failed to preview'],
+      });
+      setTimeout(() => scrollToElement(resultRef), 300);
     } finally {
       setLoading(false);
     }
@@ -150,12 +174,16 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
 
       setResult(data.result);
       setPreviewSQL(data.result.sql);
+      
+      // Scroll to result
+      setTimeout(() => scrollToElement(resultRef), 300);
     } catch (error) {
       console.error('Error executing:', error);
       setResult({
         success: false,
         errors: [error instanceof Error ? error.message : 'Failed to execute'],
       });
+      setTimeout(() => scrollToElement(resultRef), 300);
     } finally {
       setExecuting(false);
     }
@@ -176,7 +204,7 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
   };
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex flex-col gap-4 h-full pb-8">
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -234,7 +262,7 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
       )}
 
       {plan && (
-        <Card className="p-4">
+        <Card className="p-4" ref={planRef}>
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-semibold">Anonymization Plan</h4>
             <Badge variant="outline">{plan.totalRows} rows</Badge>
@@ -328,7 +356,7 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
       )}
 
       {previewSQL && (
-        <Card className="p-4">
+        <Card className="p-4" ref={sqlRef}>
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-semibold">Anonymization SQL</h4>
             <Button
@@ -348,13 +376,25 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
       )}
 
       {result && (
-        <Alert variant={result.success ? 'default' : 'destructive'}>
+        <Alert 
+          variant={result.success ? 'default' : 'destructive'}
+          className="relative"
+          ref={resultRef}
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            className="absolute top-2 right-2 h-6 w-6 p-0"
+            onClick={() => setResult(null)}
+          >
+            <X className="h-4 w-4" />
+          </Button>
           {result.success ? (
             <CheckCircle2 className="h-4 w-4" />
           ) : (
             <AlertTriangle className="h-4 w-4" />
           )}
-          <AlertDescription>
+          <AlertDescription className="pr-8">
             {result.success ? (
               <div>
                 <p className="font-medium">Anonymization Complete!</p>
@@ -365,13 +405,15 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
               </div>
             ) : (
               <div>
-                <p className="font-medium">Anonymization Failed</p>
+                <p className="font-medium">Error</p>
                 {result.errors && (
-                  <ul className="text-sm mt-1 list-disc list-inside">
+                  <div className="text-sm mt-2 space-y-1">
                     {result.errors.map((err: string, idx: number) => (
-                      <li key={idx}>{err}</li>
+                      <p key={idx} className="font-mono text-xs bg-red-50 p-2 rounded">
+                        {err}
+                      </p>
                     ))}
-                  </ul>
+                  </div>
                 )}
               </div>
             )}

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseConnection } from '@/lib/db/connection';
 import { ConnectionConfig } from '@/lib/db/types';
-
-// Store connections in memory (for MVP)
-const connections = new Map<string, DatabaseConnection>();
+import { connections } from '@/lib/db/connection-store';
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,5 +35,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
-export { connections };
