@@ -6,7 +6,9 @@ import { Card } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Shield, Download, AlertTriangle, CheckCircle2, Eye, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader2, Shield, Download, AlertTriangle, CheckCircle2, Eye, X, Database, Copy } from 'lucide-react';
 import { DatabaseSchema, api } from '@/lib/api';
 import { AnonymizationPlan, AnonymizationStrategy } from '@/lib/anonymization/types';
 
@@ -35,6 +37,14 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
   const [previewSQL, setPreviewSQL] = useState<string | null>(null);
   const [executing, setExecuting] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [mode, setMode] = useState<'modify' | 'clone'>('clone');
+  const [targetDb, setTargetDb] = useState({
+    host: '',
+    port: '5432',
+    database: '',
+    user: '',
+    password: '',
+  });
 
   const planRef = useRef<HTMLDivElement>(null);
   const sqlRef = useRef<HTMLDivElement>(null);
@@ -147,9 +157,18 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
   const handleExecute = async () => {
     if (!plan) return;
 
-    const confirmed = confirm(
-      `⚠️ This will anonymize ${plan.totalRows} rows across ${plan.tables.length} tables.\n\nThis action cannot be undone. Continue?`
-    );
+    if (mode === 'clone') {
+      if (!targetDb.host || !targetDb.database || !targetDb.user || !targetDb.password) {
+        alert('Please fill in all target database connection details');
+        return;
+      }
+    }
+
+    const confirmMessage = mode === 'clone'
+      ? `⚠️ This will create a new database "${targetDb.database}" with anonymized data from ${plan.tables.length} tables (${plan.totalRows} rows).\n\nContinue?`
+      : `⚠️ This will anonymize ${plan.totalRows} rows across ${plan.tables.length} tables in the SOURCE database.\n\nThis action cannot be undone. Continue?`;
+
+    const confirmed = confirm(confirmMessage);
 
     if (!confirmed) return;
 
@@ -163,7 +182,12 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
           'Content-Type': 'application/json',
           'x-session-id': sessionStorage.getItem('db-session-id') || 'default',
         },
-        body: JSON.stringify({ plan, executeInDb: true }),
+        body: JSON.stringify({ 
+          plan, 
+          executeInDb: true,
+          mode,
+          targetDb: mode === 'clone' ? targetDb : undefined,
+        }),
       });
 
       const data = await response.json();
@@ -212,6 +236,89 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
             Anonymize Existing Data
           </h3>
         </div>
+
+        <div className="mb-4">
+          <Label className="text-sm font-medium mb-2 block">Anonymization Mode</Label>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant={mode === 'clone' ? 'default' : 'outline'}
+              onClick={() => setMode('clone')}
+              className="w-full justify-start"
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Safe Clone
+            </Button>
+            <Button
+              variant={mode === 'modify' ? 'default' : 'outline'}
+              onClick={() => setMode('modify')}
+              className="w-full justify-start"
+            >
+              <Database className="mr-2 h-4 w-4" />
+              Modify Source
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {mode === 'clone' 
+              ? 'Create anonymized copy in a new database (recommended)' 
+              : 'Modify data directly in source database (destructive)'}
+          </p>
+        </div>
+
+        {mode === 'clone' && (
+          <div className="mb-4 space-y-3 p-3 border rounded-lg bg-slate-50">
+            <Label className="text-sm font-medium">Target Database</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs text-muted-foreground">Host</Label>
+                <Input
+                  value={targetDb.host}
+                  onChange={(e) => setTargetDb({ ...targetDb, host: e.target.value })}
+                  placeholder="localhost"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Port</Label>
+                <Input
+                  value={targetDb.port}
+                  onChange={(e) => setTargetDb({ ...targetDb, port: e.target.value })}
+                  placeholder="5432"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground">Database Name</Label>
+              <Input
+                value={targetDb.database}
+                onChange={(e) => setTargetDb({ ...targetDb, database: e.target.value })}
+                placeholder="testdb_anonymized"
+                className="h-8 text-sm"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs text-muted-foreground">User</Label>
+                <Input
+                  value={targetDb.user}
+                  onChange={(e) => setTargetDb({ ...targetDb, user: e.target.value })}
+                  placeholder="postgres"
+                  className="h-8 text-sm"
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Password</Label>
+                <Input
+                  type="password"
+                  value={targetDb.password}
+                  onChange={(e) => setTargetDb({ ...targetDb, password: e.target.value })}
+                  placeholder="••••••"
+                  className="h-8 text-sm"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         <Alert className="mb-4">
           <AlertTriangle className="h-4 w-4" />
@@ -315,14 +422,16 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
             ))}
           </div>
 
-          <Alert className="mt-4 mb-3" variant="destructive">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertDescription>
-              Execute Anonymization will modify existing data in your database. Always preview and download SQL before executing. This action cannot be undone.
-            </AlertDescription>
-          </Alert>
+          {mode === 'modify' && (
+            <Alert className="mt-4 mb-3" variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Execute Anonymization will modify existing data in your database. Always preview and download SQL before executing. This action cannot be undone.
+              </AlertDescription>
+            </Alert>
+          )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 mt-4">
             <Button
               onClick={handlePreview}
               disabled={loading}
@@ -342,18 +451,27 @@ export default function DataAnonymizationPanel({ schema }: DataAnonymizationPane
             <Button
               onClick={handleExecute}
               disabled={executing}
-              variant="destructive"
+              variant={mode === 'modify' ? 'destructive' : 'default'}
               className="flex-1"
             >
               {executing ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Executing...
+                  {mode === 'clone' ? 'Creating Clone...' : 'Executing...'}
                 </>
               ) : (
                 <>
-                  <Shield className="mr-2 h-4 w-4" />
-                  Execute Anonymization
+                  {mode === 'clone' ? (
+                    <>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Create Safe Clone
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="mr-2 h-4 w-4" />
+                      Execute Anonymization
+                    </>
+                  )}
                 </>
               )}
             </Button>
