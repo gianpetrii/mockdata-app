@@ -29,4 +29,4 @@ Scripts: `build`, `start`, `lint`.
 
 ## Variables de entorno
 
-Copiá `.env.example` a `.env.local` y completá `OPENROUTER_API_KEY` y las variables `NEXT_PUBLIC_FIREBASE_*`.
+Copiá `.env.local.example` a `.env.local` y completá `OPENROUTER_API_KEY` y las variables `NEXT_PUBLIC_FIREBASE_*`.
